@@ -3,14 +3,19 @@ import connection from "../database.js";
 export async function createGame( req, res ) {
     const { name, image, stockTotal, categoryId, pricePerDay} = req.body;
 
-    console.log('chegou no create games aqui');
-
     try {
         let gameDB = await connection.query(
             'select * from games where name=$1', [name]
         );
         if (gameDB.rows.length > 0 ) {
             return res.sendStatus(409);
+        }
+
+        let cateogoryIdDB = await connection.query(
+            'select * from categories where id=$1', [categoryId]
+        );
+        if (cateogoryIdDB.rows.length === 0) {
+            return res.sendStatus(400)
         }
 
         await connection.query(
@@ -26,15 +31,15 @@ export async function createGame( req, res ) {
 }
 
 export async function getGames (req, res) {
-    console.log('chegou no getGames');
+    const search = req.query.name;
 
     try {
         const gamesList = await connection.query(
-            `select games.*, categories.name as "categorieName" from games
-            join categories on games."categoryId"=categories.id`
-        );
+            `select games.*, categories.name as "categoryName" from games
+            join categories on games."categoryId"=categories.id
+            ${search ? `where games.name like ${search}%` : ''}`
+        )
 
-        console.log(gamesList);
         res.status(200).send(gamesList.rows);
     } catch {
         res.sendStatus(500);

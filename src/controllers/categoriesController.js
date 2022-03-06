@@ -24,16 +24,13 @@ export async function createCategory(req, res) {
 }
 
 export async function getCategories(req, res) {
-    console.log('chegou o getCategories aqui');
     try {
         let categories = await connection.query(
             'select * from categories'
         );
-        console.log(categories.rows);
 
         res.status(200).send(categories.rows);
     } catch {
-        console.log('deu ruim no getCategories');
         res.sendStatus(500);
     }
 }
