@@ -1,4 +1,5 @@
 import connection from "../database.js";
+import SqlString from 'sqlstring';
 
 export async function createGame( req, res ) {
     const { name, image, stockTotal, categoryId, pricePerDay} = req.body;
@@ -31,13 +32,14 @@ export async function createGame( req, res ) {
 }
 
 export async function getGames (req, res) {
-    const search = req.query.name;
+    let search = '';
+    if (req.query.name) search = `where games.name like ${SqlString.escape(req.query.name)}`;
 
     try {
         const gamesList = await connection.query(
             `select games.*, categories.name as "categoryName" from games
             join categories on games."categoryId"=categories.id
-            ${search ? `where games.name like ${search}%` : ''}`
+            ${search}`
         )
 
         res.status(200).send(gamesList.rows);

@@ -1,4 +1,5 @@
 import connection from "../database.js";
+import SqlString from 'sqlstring';
 
 export async function createCustomer(req, res) {
     const { name, phone, cpf, birthday } = req.body;
@@ -22,12 +23,10 @@ export async function createCustomer(req, res) {
 }
 
 export async function getCustomers(req, res) {
-
     let cpfSearch = '';
-    console.log('query cof: ', req.query.cpf);
 
     if (req.query.cpf) {
-        cpfSearch = ` where cpf like ${req.query.cpf}% `;
+        cpfSearch = ` where cpf like ${SqlString.escape(req.query.cpf)}% `;
     } 
 
     try {
@@ -49,7 +48,7 @@ export async function getCustomersbyId (req, res) {
 
         if ( search.rows.length === 0) return res.sendStatus(404);
 
-        res.send(search.rows).status(200)
+        res.send(search.rows[0]).status(200)
     } catch {
         return res.sendStatus(500);
     }
@@ -58,11 +57,12 @@ export async function getCustomersbyId (req, res) {
 export async function updateCustomer (req, res) {
     const { name, phone, cpf, email } = req.body;
     const id = req.query.id;
+    console.log('chegou no updateCustomer');
 
     try {
 
         const cpfDB = await connection.query('select * from customers where cpf=$1', [cpf]);
-        if (cpfDB.rows.length > 0) {
+        if (cpfDB.rows[0].id !== id) {
             return res.sendStatus(409)
         }
 
@@ -74,7 +74,9 @@ export async function updateCustomer (req, res) {
                 cpf=$3,
                 birthday=$4
             where id=$5 
-        `, [name, phone, cpf, email, id])
+        `, [name, phone, cpf, email, id]);
+
+        return res.sendStatus(200);
     } catch {
         return res.sendStatus(500);
     }
