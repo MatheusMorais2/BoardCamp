@@ -55,15 +55,18 @@ export async function getCustomersbyId (req, res) {
 }
 
 export async function updateCustomer (req, res) {
-    const { name, phone, cpf, email } = req.body;
-    const id = req.query.id;
-    console.log('chegou no updateCustomer');
+    const { name, phone, cpf, birthday } = req.body;
+    const id = req.params.id;
 
     try {
 
         const cpfDB = await connection.query('select * from customers where cpf=$1', [cpf]);
-        if (cpfDB.rows[0].id !== id) {
-            return res.sendStatus(409)
+
+        if(cpfDB.rows.length > 0) {
+            if (parseInt(cpfDB.rows[0].id)  !== parseInt(id)) {
+                console.log('ffs')
+                return res.sendStatus(409)
+            }    
         }
 
         await connection.query(`
@@ -74,7 +77,7 @@ export async function updateCustomer (req, res) {
                 cpf=$3,
                 birthday=$4
             where id=$5 
-        `, [name, phone, cpf, email, id]);
+        `, [name, phone, cpf, birthday, id]);
 
         return res.sendStatus(200);
     } catch {
